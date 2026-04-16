@@ -1,7 +1,7 @@
 import argparse
 import sys
 from aegis_scan import scanner, utils
-from aegis_scan import windows_checks
+from aegis_scan import windows_checks, vuln_db
 
 
 def confirm_target(target: str) -> bool:
@@ -57,11 +57,50 @@ def main(argv=None):
 
     print("Open ports:")
     for pnum in open_ports:
+        # try to grab a small banner if requested
+        b = ""
         if args.banner:
             b = scanner.grab_banner(args.target, pnum)
-            print(f" - {pnum}: {b}")
+
+        # assess severity for the open port
+        finding = vuln_db.assess_port(pnum, banner=b)
+        score = finding.get("score")
+        label = finding.get("label")
+        note = finding.get("note")
+        if b:
+            print(f" - {pnum}: {score}/10 ({label}) - {note}")
         else:
-            print(f" - {pnum}")
+            print(f" - {pnum}: {score}/10 ({label})")
+
+    # Summary: severity distribution
+    findings = {p: vuln_db.assess_port(p) for p in open_ports}
+    counts = vuln_db.summarize_findings(findings)
+    print("\nSeverity distribution (1..10):")
+    # ASCII histogram
+    for s in range(1, 11):
+        bar = "#" * counts.get(s, 0)
+        print(f" {s:2d}: {bar} ({counts.get(s,0)})")
+
+    # Try to generate a PNG chart if matplotlib present
+    try:
+        import matplotlib.pyplot as plt
+
+        scores = list(range(1, 11))
+        values = [counts.get(s, 0) for s in scores]
+        plt.figure(figsize=(6, 3))
+        plt.bar(scores, values, color="#d9534f")
+        plt.xlabel("Severity (1-10)")
+        plt.ylabel("Count")
+        plt.title("AegisScan Severity Distribution")
+        plt.xticks(scores)
+        chart_path = "docs/severity_chart.png"
+        plt.tight_layout()
+        plt.savefig(chart_path)
+        plt.close()
+        print(f"Severity chart saved to: {chart_path}")
+    except Exception:
+        # matplotlib not available or failure — skip quietly
+        pass
 
     return 0
 

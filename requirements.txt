@@ -4,3 +4,5 @@ pytest>=6.0
 impacket>=0.9.29
 # pywinrm enables WinRM interactions (optional)
 pywinrm>=0.4.2
+# Optional plotting for reports
+matplotlib>=3.0
