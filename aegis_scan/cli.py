@@ -1,7 +1,9 @@
 import argparse
 import sys
 from aegis_scan import scanner, utils
-from aegis_scan import windows_checks, vuln_db
+from aegis_scan import windows_checks, vuln_db, report
+import os
+from datetime import datetime
 
 
 def confirm_target(target: str) -> bool:
@@ -19,6 +21,7 @@ def main(argv=None):
     p.add_argument("--timeout", type=float, default=0.8, help="Connect timeout in seconds")
     p.add_argument("--workers", type=int, default=100, help="Max concurrent connections")
     p.add_argument("--banner", action="store_true", help="Try to grab service banners on open ports")
+    p.add_argument("--json", nargs="?", const="auto", help="Write JSON report. Optionally provide a path; if omitted 'auto' will write to docs/scan_<target>_<ts>.json")
     p.add_argument("--win-checks", action="store_true", help="Run Windows-specific best-effort checks (ports, SMB anonymous shares if enabled)")
     args = p.parse_args(argv)
 
@@ -72,8 +75,11 @@ def main(argv=None):
         else:
             print(f" - {pnum}: {score}/10 ({label})")
 
-    # Summary: severity distribution
-    findings = {p: vuln_db.assess_port(p) for p in open_ports}
+    # Build findings dict (include banner when present)
+    findings = {}
+    for p in open_ports:
+        # if b was captured earlier per-port, reuse; else call assess_port with banner if available
+        findings[p] = vuln_db.assess_port(p, banner=scanner.grab_banner(args.target, p) if args.banner else "")
     counts = vuln_db.summarize_findings(findings)
     print("\nSeverity distribution (1..10):")
     # ASCII histogram
@@ -101,6 +107,21 @@ def main(argv=None):
     except Exception:
         # matplotlib not available or failure — skip quietly
         pass
+
+    # JSON report output
+    if args.json:
+        out = args.json
+        if out == "auto":
+            ts = datetime.utcnow().strftime("%Y%m%dT%H%M%SZ")
+            safe_target = args.target.replace(':', '_').replace('/', '_')
+            out = os.path.join("docs", f"scan_{safe_target}_{ts}.json")
+            os.makedirs(os.path.dirname(out), exist_ok=True)
+        rep = report.build_report(args.target, open_ports, {p: {**findings.get(p, {}), "banner": (scanner.grab_banner(args.target, p) if args.banner else "") } for p in open_ports}, metadata={"timeout": args.timeout, "workers": args.workers})
+        try:
+            report.write_json_report(rep, out)
+            print(f"JSON report written to: {out}")
+        except Exception as e:
+            print(f"Failed to write JSON report: {e}")
 
     return 0
 
