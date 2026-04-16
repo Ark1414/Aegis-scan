@@ -14,14 +14,7 @@ Important safety
 ----------------
 Only run scans against hosts or networks you own or have explicit permission to test. Misuse can be illegal.
 
-Linking GitHub to VS Code
-------------------------
-- In VS Code: open the Command Palette (Ctrl+Shift+P) -> "Sign in to GitHub" and follow the prompts.
-- Or push this repo to GitHub and open it in VS Code. Use the Git extension to see changes.
 
-To quickly set a remote from PowerShell (replace <repo-url>):
-
-  .\scripts\setup_git_remote.ps1 -RepoUrl "https://github.com/username/repo.git"
 
 Files
 -----
