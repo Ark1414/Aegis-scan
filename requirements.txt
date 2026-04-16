@@ -1,1 +1,6 @@
 pytest>=6.0
+# Optional (enable Windows deep checks):
+# impacket provides SMB/RPC helpers used by windows_checks
+impacket>=0.9.29
+# pywinrm enables WinRM interactions (optional)
+pywinrm>=0.4.2
