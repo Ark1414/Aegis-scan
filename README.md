@@ -3,6 +3,10 @@ Aegis Scan
 
 Aegis Scan is a small, safe network reconnaissance tool for authorized testing and learning.
 
+Clone this repository:
+
+  git clone https://github.com/Ark1414/Aegis-scan.git
+
 Usage
 -----
 
