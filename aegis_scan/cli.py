@@ -21,13 +21,15 @@ def main(argv=None):
     p.add_argument("--timeout", type=float, default=0.8, help="Connect timeout in seconds")
     p.add_argument("--workers", type=int, default=100, help="Max concurrent connections")
     p.add_argument("--banner", action="store_true", help="Try to grab service banners on open ports")
+    p.add_argument("--yes", action="store_true", help="Skip consent prompt (non-interactive)")
     p.add_argument("--json", nargs="?", const="auto", help="Write JSON report. Optionally provide a path; if omitted 'auto' will write to docs/scan_<target>_<ts>.json")
     p.add_argument("--win-checks", action="store_true", help="Run Windows-specific best-effort checks (ports, SMB anonymous shares if enabled)")
     args = p.parse_args(argv)
 
-    if not confirm_target(args.target):
-        print("Aborted.")
-        return 1
+    if not args.yes:
+        if not confirm_target(args.target):
+            print("Aborted.")
+            return 1
 
     ports = utils.parse_ports(args.ports)
     print(f"Scanning {args.target} ports: {ports[:10]}{('...' if len(ports)>10 else '')}")
