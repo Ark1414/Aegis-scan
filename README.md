@@ -5,14 +5,19 @@ Aegis Scan is a small, safe network reconnaissance tool for authorized testing a
 
 Usage
 -----
-- Python 3.8+
-- From the repository root run:
 
   python -m aegis_scan.cli --target 192.0.2.1 --ports 22,80,443
 
 Important safety
-----------------
 Only run scans against hosts or networks you own or have explicit permission to test. Misuse can be illegal.
+
+Automated local port discovery and scan (Windows)
+-----------------------------------------------
+You can automatically discover listening TCP ports on this Windows machine and run AegisScan against them with the included PowerShell helper:
+
+  .\\scripts\\auto_scan.ps1 -Target 127.0.0.1 -WinChecks
+
+This will list listening ports using `Get-NetTCPConnection` and run the scanner non-interactively (it auto-confirms consent). Use only on hosts you own or have permission to test.
 
 
 
